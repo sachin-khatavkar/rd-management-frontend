@@ -85,5 +85,5 @@ Frontend runs on:
 
 ## 👨‍💻 Author
 
-Sachin Jivan Khatavkar
+**Sachin Jivan Khatavkar**
 Full Stack Java Developer (Spring Boot + React)
