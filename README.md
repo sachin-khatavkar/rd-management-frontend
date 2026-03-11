@@ -26,15 +26,15 @@ React Icons
 
 ## 📂 Project Structure
 
-src/
- ├── assets/
- │   └── react.svg
- ├── App.jsx
- ├── Login.jsx
- ├── Login.css
- ├── Signup.jsx
- ├── Rduser.jsx
- ├── main.jsx
+src
+ ├─ assets
+ │   └─ react.svg
+ ├─ App.jsx
+ ├─ Login.jsx
+ ├─ Login.css
+ ├─ Signup.jsx
+ ├─ Rduser.jsx
+ ├─ main.jsx
 
 public/
  └── vite.svg
