@@ -7,6 +7,7 @@ import { FaPencilAlt } from "react-icons/fa";
 import { FaTrash } from "react-icons/fa";
 import { FaRegAddressBook } from "react-icons/fa";
 import { FaEye } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 export default function Rduser(){
     const[cs,setCs]=useState([])
@@ -15,7 +16,10 @@ export default function Rduser(){
   const [show, setShow] = useState(false);
 
   // ================= ADD MODAL HANDLERS =================
-  const handleShow = () => setShow(true);
+  const handleShow = () => {
+  setAccepted(false);   // ✅ reset checkbox
+  setShow(true);
+};
   const handleClose = () => setShow(false);
 
   //update
@@ -42,6 +46,15 @@ export default function Rduser(){
   const handlePeClose = () => setPeShow(false); 
 
 
+  const [baseRdamt, setBaseRdamt] = useState(0);  // ✅ ADDED
+
+  // ✅ ADDED
+const [loanRdamt, setLoanRdamt] = useState(0);
+
+const [accepted, setAccepted] = useState(false);
+
+
+
 const [rid, setRid] = useState(0);    
 const [nm, setName] = useState('');
 const [adr, setAdr] = useState('');
@@ -59,7 +72,9 @@ const [nadhno, setNAdhno] = useState('');
 const [npnno, setNPnno] = useState('');
 const [ldt, setLtd] = useState('');
 const [fmt, setFmt] = useState('');
-const [rnm, setRnm] = useState(''); // ✅ ADD THIS
+const [rnm, setRnm] = useState('');
+const [cnt, setCnt] = useState(0); // ✅ ADD THIS
+const [ttlamt, setTtlamt] = useState(0); 
 
 
 const getnm = (e) => { setName(e.target.value)}
@@ -100,12 +115,78 @@ const ugetnadr = (e) => { setNAdr(e.target.value)}
 const ugetnadhno = (e) => { setNAdhno(e.target.value)}
 const ugetnpnno = (e) => { setNPnno(e.target.value)}
 
-function getPentry(rid, rnm){
-   setRid(rid);
-   setRnm(rnm);        // ✅ CORRECT
-   handlePeShow();
-   Pentry(rid);
+const navigate = useNavigate();
+
+const role = localStorage.getItem("role");
+const loggedUser = localStorage.getItem("user");
+
+useEffect(()=>{
+  if(!loggedUser){
+  navigate("/");
 }
+},[]);
+
+// ✅ FULLY UPDATED
+const getLoan = () => {
+
+  if (cnt < 6) {
+    alert("Minimum 6 EMI required for Loan Eligibility");
+    return;
+  }
+
+  let loanAmount = 0;
+  const amt = Number(loanRdamt);
+
+  console.log("Loan RD Amount:", amt); // debug
+
+  if (amt === 1000) loanAmount = 10000;
+  else if (amt === 2000) loanAmount = 20000;
+  else if (amt === 3000) loanAmount = 40000;
+  else if (amt > 0) loanAmount = amt * 10;
+
+  if (loanAmount === 0) {
+    alert("Loan Amount Calculation Error");
+    return;
+  }
+
+  alert("Loan Approved Amount: ₹" + loanAmount);
+};
+
+let shtl = () => {
+
+  alert("Total Installments: " + cnt)
+
+  // Cannot close before 12 EMI
+  if (cnt < 12) {
+
+    // 10% penalty deduction
+    const penalty = (ttlamt * 10) / 100;  
+    const finalAmount = ttlamt - penalty; 
+
+    alert("Premature Closure\n10% Deduction Applied\nFinal Amount: ₹" + finalAmount)
+
+  } else {
+
+    // 14% interest on full maturity
+    let interest = (ttlamt * 14) / 100;
+    let finalAmount = ttlamt + interest;
+
+    alert("Full Mature Amount: ₹" + finalAmount)
+  }
+}
+
+// ✅ UPDATED
+function getPentry(id, name, monthlyAmount){
+   handlePeShow();
+   setRid(id);
+   setRnm(name);
+
+   const amt = Number(monthlyAmount) || 0;  // 🔥 important
+   setLoanRdamt(amt);
+
+   Pentry(id);
+}
+
 
 function getId(
   rid,
@@ -137,41 +218,57 @@ function getId(
 }
 
 
- const psave = () => {
+ // ✅ FINAL FIXED
+const psave = () => {
+
+  const lateDays = Number(ldt) || 0;
+
+  // 🔥 calculate fine strictly
+  const fineAmount = lateDays > 0 ? lateDays * 50 : 0;
+
   const dt = {
-    
-    famt: fmt,
-    lag: 0,
-    lday: ldt,
-    rdamt: rdamt,
+    famt: fineAmount,
+    lday: lateDays,
+    rdamt: Number(rdamt),
     rddate: rdt,
     rid: rid
   };
- axios.post("http://localhost:8080/psave", dt)
-      .then(res => {
-        alert("Success");
-        rduser();          // table refresh
-        setPShow(false); // modal close
-      })
-  };
 
- const Pentry = (id) => {
+  console.log("Sending Data:", dt); // debug
+
+  axios.post("http://localhost:8080/psave", dt)
+    .then(res => {
+      alert("Success");
+
+      Pentry(rid);  // 🔥 refresh passbook
+      setPShow(false);
+      setLtd("");   // reset
+    })
+};
+
+  const Pentry = (id) => {
+
+  console.log("Clicked RID:", id);   // ✅ check 1
 
   axios.get("http://localhost:8080/passbookById/" + id)
     .then(res => {
-      setPCs(res.data)
-      console.log(res.data)
-      let sm=0;
-      let r=0;
-      for (let i=0;i<pcs.length;i++){
-        r=Number(res.data.rdamt);
-        console.log("rrrrrrr:"+r)
-        sm=sm+Number(res.data.r);
 
-      }
-      console.log("ramt:"+sm)
+      console.log("API Response:", res.data);   // ✅ check 2
+
+      setPCs(res.data);
+
+      setCnt(res.data.length);
+
+      const total = res.data.reduce(
+        (sum, item) => sum + Number(item.rdamt), 0
+      );
+
+      setTtlamt(total);
     })
-}
+    .catch(err => {
+      console.log("API ERROR:", err);  // ✅ check 3
+    });
+};
 
 
   const del = (id) => {
@@ -217,7 +314,10 @@ const update = () => {
       })
   };
 
-const save = () => {
+  console.log("Accepted Value:", accepted);
+  
+  const save = () => {
+
   const dt = {
     acno: acno,
     addr: adr,
@@ -235,18 +335,19 @@ const save = () => {
     rddate: rdt
   };
 
+  axios.post("http://localhost:8080/save", dt)
+    .then(res => {
+      alert("Success");
+      rduser();
+      setShow(false);
+      setAccepted(false);
+    })
+    .catch(err => {
+      console.log("SAVE ERROR:", err);
+      alert("Error while saving data");
+    });
+};
 
-  
-
- axios.post("http://localhost:8080/save", dt)
-      .then(res => {
-        alert("Success");
-        rduser();          // table refresh
-        setUShow(false); // modal close
-      })
-  };
-
-  
     const rduser=()=>{
         axios.get("http://localhost:8080/rduser")
         .then(res=>{
@@ -258,14 +359,15 @@ const save = () => {
 
     useEffect(()=>{
         rduser();
-    },[])
+    },[]);
+
 return (
   <>
     <div className="container mt-3">
 
       {/* ADD BUTTON */}
       <Button variant="primary" onClick={handleShow}>
-        Add New RD user
+      Add RD User
       </Button>
 
       {/* ADD MODAL */}
@@ -379,8 +481,6 @@ return (
           placeholder="Enter RD Amount"/>
           <Form.Control size="sm" value={ldt} onChange={Pgetldt} type="number"
           placeholder="Late day"/>
-          <Form.Control size="sm" value={fmt} onChange={Pgetfmt} type="number"
-          placeholder="Fine Amount"/>
         </Modal.Body>
 
         
@@ -404,7 +504,10 @@ return (
         </Modal.Header>
 
         <Modal.Body>
-           <p>Id:{rid}{" | "}Name:{rnm}</p>
+          <p><b>Id:</b> {rid}</p>
+          <p><b>Name:</b> {rnm}</p>
+          <p><b>Total Installments:</b> {cnt}</p>
+          <p><b>Total Amount:</b> ₹{ttlamt}</p>
           {/* ================= TABLE ================= */}
       <table className="table table-dark mt-3">
         <thead>
@@ -436,6 +539,12 @@ return (
 
         
         <Modal.Footer>
+          <Button variant="warning"onClick={shtl}>
+            Settle Amount
+          </Button>
+          <Button variant="primary" onClick={getLoan}>  
+           Get Loan
+          </Button>
           <Button variant="secondary" onClick={handlePeClose}>
             Close
           </Button>
@@ -464,8 +573,13 @@ return (
         </thead>
 
         <tbody>
-          {cs.map((item) => (
-  <tr key={item.rid}>   
+        {cs
+        .filter(item => {
+         if(role === "admin") return true; // admin la sagla disel
+         return item.adharno === loggedUser; // user la tyachach
+        })
+         .map((item) => (
+         <tr key={item.rid}>   
 
               <td>{item.rid}</td>
               <td>{item.name}</td>
@@ -510,8 +624,7 @@ return (
   }}
   
 />
- <FaEye title=" View Passbook Entry" onClick={() => getPentry(item.rid,item.name,)}> </ FaEye >
-
+<FaEye onClick={() => getPentry(item.rid, item.name, item.rdamt)} />
 
               </td>
             </tr>
