@@ -1,89 +1,61 @@
 # Recurring Deposit (RD) Management System - Frontend
 
 ## 📌 Project Overview
-
 This is a React + Vite based frontend application for the Recurring Deposit (RD) Management System.
 
-It connects with a Spring Boot REST API backend to perform full CRUD operations on RD accounts and manage passbook installment entries.
-
----
+The application connects with a Spring Boot REST API backend to manage RD users, passbook entries, transactions and RD loan eligibility.
 
 ## 🚀 Tech Stack
-
-- React (Functional Components + Hooks)
-- Vite
-- Axios
-- React Bootstrap
-- Bootstrap 5
-- React Icons
-
----
-
-## 🔗 Backend Repository
-
-This frontend is connected to:
-
-👉 Spring Boot RD Management Backend API  
-(Runs on: http://localhost:8080)
-
----
+React (Functional Components + Hooks)
+Vite
+Axios
+React Bootstrap
+Bootstrap 5
+React Icons
 
 ## ✨ Features
-
-- ✅ Create RD User
-- ✅ Update RD User
-- ✅ Delete RD User
-- ✅ Add Passbook Installment Entry
-- ✅ View RD-wise Passbook History
-- ✅ Dynamic Modal Forms
-- ✅ REST API Integration using Axios
-
----
+✅ RD User Registration with Terms & Conditions  
+✅ Login using Aadhar Number  
+✅ Create / Update / Delete RD User  
+✅ RD Wise Passbook Entry  
+✅ View Passbook History  
+✅ Transaction Count & Total Amount Dashboard  
+✅ Loan Eligibility Check (Minimum 6 Transactions)  
+✅ RD Early Settlement Option (50% payout rule)  
+✅ 12 Month Completion Bonus (14% benefit)
 
 ## 📂 Project Structure
 
 src/
-├── App.jsx
-├── Rduser.jsx
-├── main.jsx
+ ├── assets/
+ │   └── react.svg
+ ├── App.jsx
+ ├── Login.jsx
+ ├── Login.css
+ ├── Signup.jsx
+ ├── Rduser.jsx
+ ├── main.jsx
 
+public/
+ └── vite.svg
 
----
+index.html
+package.json
+vite.config.js
 
-## ▶️ How to Run the Project
+## ▶️ Run Project
+1. Install dependencies
+npm install
 
-### 1️⃣ Install Dependencies
-
-### 2️⃣ Start Development Server
-
+2. Start development server
+npm run dev
 
 Frontend runs on:
+http://localhost:5173
 
----
-
-## 🔄 API Endpoints Used
-
-| Method | Endpoint |
-|--------|----------|
-| GET | /rduser |
-| POST | /save |
-| PUT | /updt |
-| DELETE | /dlt/{id} |
-| POST | /psave |
-| GET | /passbookById/{id} |
-
----
-
-## 📌 Future Improvements
-
-- Authentication & Login System
-- Dashboard Analytics
-- Validation Enhancements
-- Deployment Netlify
-
----
+## 🔗 Backend
+Spring Boot RD Management Backend API
 
 ## 👨‍💻 Author
-
-**Sachin Jivan Khatavkar**
+Sachin Jivan Khatavkar
 Full Stack Java Developer (Spring Boot + React)
